@@ -32,6 +32,7 @@ ZOOMS       = (0.5, 0.75, 1, 1.5, 2, 3, 4)   # Zoom choices in the menu
 FRAME_MS    =  20   # How often the hands are updated (20 ms = 50 frames/s)
 BEZEL       = True  # Grey ring around the face (the light version in the JS)
 BEZEL_WIDTH =   6   # Its width in clock units; the face is 105 across (JS: 1.5)
+INVERT      = False # Start with inverted colours (black face, white hands)
 
 CYCLE_SECONDS = 58.5   # Time the second hand takes to go round
 EASING_MS     = 2000   # Duration of the minute and hour hands' swing
@@ -40,7 +41,7 @@ FACE_COLOR   = (255, 255, 255)
 BEZEL_COLOR  = (118, 118, 118)
 TICK_COLOR   = ( 30,  30,  30)
 HAND_COLOR   = (  0,   0,   0)
-SECOND_COLOR = (235,   0,   0)
+SECOND_COLOR = (235,   0,   0)   # Stays red when the colours are inverted
 
 # ----------------------------------------------------------------------
 # Clock geometry, copied from the SVG drawings in sbbUhr-1.3.js. All
@@ -109,6 +110,7 @@ BI_RGB         = 0
 DIB_RGB_COLORS = 0
 
 ID_EXIT         = 1
+ID_INVERT       = 2
 ID_ZOOM_FIRST   = 100   # Zoom choice i gets command ID_ZOOM_FIRST + i
 FRAME_TIMER_ID  = 1
 
@@ -363,6 +365,9 @@ dpi_scale = 1.0
 # Zoom chosen from the right-click menu.
 zoom = ZOOM
 
+# Inverted colours, toggled from the right-click menu.
+inverted = INVERT
+
 # How many times larger than on screen everything is drawn.
 OVERSAMPLE = 4
 
@@ -378,6 +383,11 @@ def scale():
 
 def clock_size():
     return round(SIZE * scale())
+
+
+def shade(colour):
+    """A face, bezel, tick or hand colour, inverted if chosen."""
+    return tuple(255 - c for c in colour) if inverted else colour
 
 
 def to_pixels(points, angle, size):
@@ -415,10 +425,10 @@ def premultiply_bgra(image):
     ))
 
 
-# The face never changes, so it is rendered once per scale. The
-# argument is not used directly, it only keeps the cache per scale.
+# The face never changes, so it is rendered once per scale and colour
+# scheme. The arguments are not used directly, they only key the cache.
 @functools.lru_cache(maxsize=None)
-def make_face(current_scale):
+def make_face(current_scale, current_inverted):
     big = clock_size() * OVERSAMPLE
     image = Image.new("RGBA", (big, big), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
@@ -430,12 +440,13 @@ def make_face(current_scale):
                      fill=colour)
 
     if BEZEL:
-        circle(BEZEL_RADIUS, BEZEL_COLOR)
-    circle(FACE_RADIUS, FACE_COLOR)
+        circle(BEZEL_RADIUS, shade(BEZEL_COLOR))
+    circle(FACE_RADIUS, shade(FACE_COLOR))
 
     for minute in range(60):
         shape = tick(*(HOUR_TICK if minute % 5 == 0 else MINUTE_TICK))
-        draw.polygon(to_pixels(shape, minute * 6, big), fill=TICK_COLOR)
+        draw.polygon(to_pixels(shape, minute * 6, big),
+                     fill=shade(TICK_COLOR))
 
     # Shrink first, then premultiply: Pillow's reduce() already takes
     # transparency into account when averaging RGBA pixels.
@@ -481,9 +492,9 @@ def draw_hand(frame, polygons, discs, angle, colour):
 
 def make_frame(angles):
     hours, minutes, seconds = angles
-    frame = make_face(scale()).copy()
-    draw_hand(frame, [HOUR_HAND], [], hours, HAND_COLOR)
-    draw_hand(frame, [MINUTE_HAND], [], minutes, HAND_COLOR)
+    frame = make_face(scale(), inverted).copy()
+    draw_hand(frame, [HOUR_HAND], [], hours, shade(HAND_COLOR))
+    draw_hand(frame, [MINUTE_HAND], [], minutes, shade(HAND_COLOR))
     draw_hand(frame, [SECOND_STEM], [SECOND_DISC], seconds, SECOND_COLOR)
     return frame.tobytes()
 
@@ -593,6 +604,8 @@ def set_zoom(hwnd, new_zoom):
 
 
 def show_menu(hwnd):
+    global inverted
+
     menu = user32.CreatePopupMenu()
 
     zoom_menu = user32.CreatePopupMenu()
@@ -603,6 +616,8 @@ def show_menu(hwnd):
 
     # The menu takes ownership of the submenu and destroys it with itself.
     user32.AppendMenuW(menu, MF_POPUP, zoom_menu, "Zoom")
+    user32.AppendMenuW(menu, MF_STRING | (MF_CHECKED if inverted else 0),
+                       ID_INVERT, "Invert Colors")
     user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
     user32.AppendMenuW(menu, MF_STRING, ID_EXIT, "Exit")
 
@@ -625,6 +640,9 @@ def show_menu(hwnd):
 
     if command == ID_EXIT:
         user32.DestroyWindow(hwnd)
+    elif command == ID_INVERT:
+        inverted = not inverted
+        draw_clock(hwnd, current_hand_angles())
     elif ID_ZOOM_FIRST <= command < ID_ZOOM_FIRST + len(ZOOMS):
         set_zoom(hwnd, ZOOMS[command - ID_ZOOM_FIRST])
 

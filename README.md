@@ -37,8 +37,10 @@ pythonw SBB-Uhr.py
 ## Using
 
 - **Left-drag** the clock to move it anywhere on the screen.
-- **Right-click** it for a menu with **Zoom** (0.5x to 4x) and **Exit**.
-  Zooming keeps the clock centred where it is.
+- **Right-click** it for a menu with **Zoom** (0.5x to 4x),
+  **Invert Colors** and **Exit**. Zooming keeps the clock centred where
+  it is. Inverting gives a black face with white ticks and hands; the
+  second hand stays red.
 
 ## Settings
 
@@ -54,6 +56,7 @@ Windows scaling.
 | `FRAME_MS`      | How often the hands are updated (ms)                 |
 | `BEZEL`         | Grey ring around the face (`True`) or none (`False`) |
 | `BEZEL_WIDTH`   | Width of the grey ring, in units of the 105-wide face |
+| `INVERT`        | Start with inverted colours (changeable from the menu) |
 | `CYCLE_SECONDS` | Time the second hand takes to go round               |
 | `EASING_MS`     | Duration of the minute and hour hands' swing (ms)    |
 | `*_COLOR`       | Colours of the face, bezel, ticks and hands          |
