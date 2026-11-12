@@ -3,6 +3,8 @@
 The Swiss railway clock (SBB Uhr) as a small window on the Windows
 desktop, written in Python.
 
+![SBB-Uhr in normal and inverted colours](screenshot.png)
+
 The clock floats on top of other windows with no frame, title bar or
 taskbar button. Its edges are smoothly blended with whatever is behind
 it, and it stays sharp at any display scaling, including when moved
