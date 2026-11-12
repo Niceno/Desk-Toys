@@ -34,7 +34,8 @@ pythonw Win-Eyes.py
 
 - **Left-drag** the eyes to move them anywhere on the screen.
 - **Right-click** them for a menu with **Zoom** (0.75x to 4x) and
-  **Exit**. Zooming keeps the eyes centred where they are.
+  **Exit**. Zooming keeps the upper left corner of the eyes in
+  place.
 
 Each pupil looks towards the mouse pointer, stopping at the edge of its
 eye. When the pointer is inside an eye, the pupil sits right under it.
