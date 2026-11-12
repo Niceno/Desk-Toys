@@ -588,20 +588,18 @@ def update_clock(hwnd):
 # ----------------------------------------------------------------------
 
 def set_zoom(hwnd, new_zoom):
-    """Resize the clock, keeping its centre on the same spot."""
+    """Resize the clock, keeping the upper left corner on the same spot."""
     global zoom
 
     rect = wintypes.RECT()
     user32.GetWindowRect(hwnd, ctypes.byref(rect))
-    centre_x = (rect.left + rect.right) // 2
-    centre_y = (rect.top + rect.bottom) // 2
 
     zoom = new_zoom
     user32.SetWindowPos(
         hwnd,
         None,
-        centre_x - clock_size() // 2,
-        centre_y - clock_size() // 2,
+        rect.left,
+        rect.top,
         clock_size(),
         clock_size(),
         SWP_NOZORDER | SWP_NOACTIVATE,

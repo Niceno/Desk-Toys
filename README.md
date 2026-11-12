@@ -40,8 +40,8 @@ pythonw SBB-Uhr.py
 
 - **Left-drag** the clock to move it anywhere on the screen.
 - **Right-click** it for a menu with **Zoom** (0.5x to 4x),
-  **Invert Colors** and **Exit**. Zooming keeps the clock centred where
-  it is. Inverting gives a black face with white ticks and hands; the
+  **Invert Colors** and **Exit**. Zooming keeps the upper left corner of
+  the clock where it is. Inverting gives a black face with white ticks and hands; the
   second hand stays red.
 
 ## Settings
