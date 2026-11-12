@@ -66,9 +66,11 @@ Windows scaling.
 ## Origin
 
 The geometry and motion come from SBB's JavaScript clock
-(`sbbUhr-1.3.js`) in the [`digital-clock`](digital-clock) folder, which
-can still be opened in a browser (`digital-clock/index.html`). SBB no
-longer maintains it and points to the clock in the
+(`sbbUhr-1.3.js`, "Digital SBB Uhr V 1.3", by SBB AG) in the
+[`digital-clock`](https://github.com/sbb-design-systems/brand-elements/tree/main/digital-clock)
+folder of SBB's [brand-elements](https://github.com/sbb-design-systems/brand-elements)
+repository, from which this one is forked. SBB no longer maintains it
+and points to the clock in the
 [Lyne Design System](https://digital.sbb.ch/en/design-system/lyne/components/clock/)
 instead.
 

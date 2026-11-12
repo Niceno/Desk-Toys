@@ -1,9 +1,15 @@
 """SBB-Uhr: the Swiss railway clock as a small desktop window.
 
-A Python translation of sbbUhr-1.3.js (Digital SBB Uhr V 1.3, by SBB AG,
-Apache-2.0), found in the digital-clock folder. The face, the ticks and
-the hands use the geometry of the SVG drawings in that script, and the
-hands move the same way:
+A Python translation of sbbUhr-1.3.js from the digital-clock folder of
+https://github.com/sbb-design-systems/brand-elements, which carries
+this notice:
+
+    Digital SBB Uhr V 1.3 (marke@sbb.ch)
+    All rights reserves by SBB AG, Switzerland.
+    Apache-2.0 License
+
+The face, the ticks and the hands use the geometry of the SVG drawings
+in that script, and the hands move the same way:
 
 - the second hand goes round in 58.5 s and waits at 12 for the rest of
   the minute,
