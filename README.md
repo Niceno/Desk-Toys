@@ -44,6 +44,13 @@ pythonw SBB-Uhr.py
   the clock where it is. Inverting gives a black face with white ticks and hands; the
   second hand stays red.
 
+The clock remembers where it is, its zoom and its colours, in
+`%APPDATA%\SBB-Uhr\settings.json`, so it comes back as it was after a
+reboot. **Exit** forgets them: the next start is at the starting
+position, zoom and colours again. The starting position, right of
+[Net-Eye](https://github.com/Niceno/Net-Eye) and
+[Win-Eyes](https://github.com/Niceno/Win-Eyes), keeps the three apart.
+
 ## Settings
 
 The look and behaviour are set by constants at the top of `SBB-Uhr.py`.
@@ -59,6 +66,7 @@ Windows scaling.
 | `BEZEL`         | Grey ring around the face (`True`) or none (`False`) |
 | `BEZEL_WIDTH`   | Width of the grey ring, in units of the 105-wide face |
 | `INVERT`        | Start with inverted colours (changeable from the menu) |
+| `START_X`, `START_Y` | Starting position of the upper left corner      |
 | `CYCLE_SECONDS` | Time the second hand takes to go round               |
 | `EASING_MS`     | Duration of the minute and hour hands' swing (ms)    |
 | `*_COLOR`       | Colours of the face, bezel, ticks and hands          |
