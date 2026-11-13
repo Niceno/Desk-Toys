@@ -155,7 +155,7 @@ temperature gauge: 30 to 100 °C over three quarters of the circle, red
 from 90. The needle starts at the bottom and swings up, then glides to
 each new reading, once a second.
 
-![CPU-Temp at 70 °C, inverted, at 95 °C and below its scale](images/cpu-temp.png)
+![CPU-Temp in normal and inverted colours](images/cpu-temp.png)
 
 Menu: **Zoom** (0.5x to 4x), **Invert Colors**, **Exit**. Its colours
 are SBB-Uhr's inverted, so the two match side by side: the black
