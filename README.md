@@ -37,6 +37,13 @@ pythonw Win-Eyes.py
   **Exit**. Zooming keeps the upper left corner of the eyes in
   place.
 
+The eyes remember where they are and their zoom, in
+`%APPDATA%\Win-Eyes\settings.json`, so they come back as they were
+after a reboot. **Exit** forgets both: the next start is at the
+starting position and zoom again. The starting position, right of
+[Net-Eye](https://github.com/Niceno/Net-Eye) and left of
+[SBB-Uhr](https://github.com/Niceno/SBB-Uhr), keeps the three apart.
+
 Each pupil looks towards the mouse pointer, stopping at the edge of its
 eye. When the pointer is inside an eye, the pupil sits right under it.
 
@@ -51,6 +58,7 @@ Windows scaling.
 | `SIZE`          | Size of one eye; the window is two eyes wide       |
 | `ZOOM`          | Starting zoom (changeable from the menu)           |
 | `ZOOMS`         | Zoom choices offered in the menu                   |
+| `START_X`, `START_Y` | Starting position of the upper left corner    |
 | `FOLLOW_MS`     | How often the mouse position is checked (ms)       |
 | `PUPIL_RADIUS`  | Radius of the pupil                                |
 | `PUPIL_GAP`     | Smallest gap between the pupil and the eye outline |

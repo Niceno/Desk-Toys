@@ -1,3 +1,5 @@
+import os
+import json
 import math
 import functools
 import ctypes
@@ -12,6 +14,8 @@ from PIL import Image, ImageDraw, ImageChops
 SIZE          = 70   # Size of one eye; the window is two eyes wide
 ZOOM          =  1   # Starting zoom; can be changed from the right-click menu
 ZOOMS         = (0.75, 1, 1.5, 2, 3, 4)   # Zoom choices in the menu
+START_X       = 90   # Starting position: right of Net-Eye (10 + 70 + 10)
+START_Y       = 10
 FOLLOW_MS     = 20   # How often the cursor position is polled
 PUPIL_RADIUS  =  6   # Radius of the pupil
 PUPIL_GAP     =  6   # Smallest gap between the pupil and the eye outline
@@ -41,11 +45,14 @@ WM_LBUTTONDOWN = 0x0201
 WM_RBUTTONUP   = 0x0205
 WM_TIMER       = 0x0113
 WM_DPICHANGED  = 0x02E0
+WM_EXITSIZEMOVE = 0x0232
 
 SWP_NOZORDER   = 0x0004
 SWP_NOACTIVATE = 0x0010
 
 DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
+
+MONITOR_DEFAULTTONULL = 0
 
 WM_NCLBUTTONDOWN = 0x00A1
 HTCAPTION        = 2
@@ -235,6 +242,9 @@ user32.SetWindowPos.argtypes = [
 ]
 user32.SetWindowPos.restype = wintypes.BOOL
 
+user32.MonitorFromPoint.argtypes = [wintypes.POINT, wintypes.DWORD]
+user32.MonitorFromPoint.restype  = wintypes.HANDLE
+
 user32.SetProcessDpiAwarenessContext.argtypes = [ctypes.c_void_p]
 user32.SetProcessDpiAwarenessContext.restype  = wintypes.BOOL
 user32.GetDpiForWindow.argtypes = [wintypes.HWND]
@@ -275,6 +285,60 @@ gdi32.DeleteObject.argtypes = [wintypes.HGDIOBJ]
 gdi32.DeleteObject.restype  = wintypes.BOOL
 gdi32.DeleteDC.argtypes = [wintypes.HDC]
 gdi32.DeleteDC.restype  = wintypes.BOOL
+
+
+# ----------------------------------------------------------------------
+# Remembering the window: its position and zoom are saved after every
+# move and zoom change, and read at the start, so the eyes come back
+# where they were after a reboot.  Exit from the menu deletes them, so
+# the next start is at the starting position and zoom again.
+# ----------------------------------------------------------------------
+
+SETTINGS_FILE = os.path.join(os.environ.get("APPDATA", "."),
+                             "Win-Eyes", "settings.json")
+
+
+def load_settings():
+    """The settings saved last, or {} if there are none."""
+    try:
+        with open(SETTINGS_FILE) as file:
+            settings = json.load(file)
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(settings, dict):
+        return {}
+    return settings
+
+
+def save_settings(hwnd):
+    rect = wintypes.RECT()
+    user32.GetWindowRect(hwnd, ctypes.byref(rect))
+    settings = {"x": rect.left, "y": rect.top, "zoom": zoom}
+
+    # Write a new file and swap it in, so a crash or a power cut while
+    # writing never leaves half a file behind.
+    temporary = SETTINGS_FILE + ".tmp"
+    try:
+        os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
+        with open(temporary, "w") as file:
+            json.dump(settings, file)
+        os.replace(temporary, SETTINGS_FILE)
+    except OSError:
+        pass
+
+
+def forget_settings():
+    try:
+        os.remove(SETTINGS_FILE)
+    except OSError:
+        pass
+
+
+def on_a_monitor(x, y):
+    """True if the point (in screen pixels) is on a monitor; a saved
+    position may be on one that is no longer connected."""
+    point = wintypes.POINT(x, y)
+    return bool(user32.MonitorFromPoint(point, MONITOR_DEFAULTTONULL))
 
 
 # ----------------------------------------------------------------------
@@ -502,6 +566,7 @@ def set_zoom(hwnd, new_zoom):
         SWP_NOZORDER | SWP_NOACTIVATE,
     )
     draw_eyes(hwnd, pupils_for_cursor(hwnd))
+    save_settings(hwnd)
 
 
 def show_menu(hwnd):
@@ -536,6 +601,7 @@ def show_menu(hwnd):
     user32.DestroyMenu(menu)
 
     if command == ID_EXIT:
+        forget_settings()
         user32.DestroyWindow(hwnd)
     elif ID_ZOOM_FIRST <= command < ID_ZOOM_FIRST + len(ZOOMS):
         set_zoom(hwnd, ZOOMS[command - ID_ZOOM_FIRST])
@@ -549,6 +615,11 @@ def window_proc(window, message, wparam, lparam):
         # Drag the eyes around by any visible part.
         user32.ReleaseCapture()
         user32.SendMessageW(window, WM_NCLBUTTONDOWN, HTCAPTION, 0)
+        return 0
+
+    if message == WM_EXITSIZEMOVE:
+        # A drag has ended.
+        save_settings(window)
         return 0
 
     if message == WM_RBUTTONUP:
@@ -574,6 +645,7 @@ def window_proc(window, message, wparam, lparam):
             SWP_NOZORDER | SWP_NOACTIVATE,
         )
         draw_eyes(window, current_pupils)
+        save_settings(window)
         return 0
 
     if message == WM_DESTROY:
@@ -606,13 +678,26 @@ user32.RegisterClassW(ctypes.byref(window_class))
 # by stretching it. Must happen before the window is created.
 user32.SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
 
+# Where and how large the eyes were, if that was saved and its centre
+# is still on a monitor; else the starting position and zoom.
+saved = load_settings()
+if saved.get("zoom") in ZOOMS:
+    zoom = saved["zoom"]
+x = saved.get("x")
+y = saved.get("y")
+restored = (isinstance(x, int) and isinstance(y, int)
+            and on_a_monitor(x + SIZE, y + SIZE // 2))
+if not restored:
+    x = START_X
+    y = START_Y
+
 hwnd = user32.CreateWindowExW(
     WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
     class_name,
     "WinEyes",
     WS_POPUP,
-    100,
-    100,
+    x,
+    y,
     2 * SIZE,
     SIZE,
     None,
@@ -621,7 +706,13 @@ hwnd = user32.CreateWindowExW(
     None,
 )
 
+# The starting position grows with the display scaling, like the sizes.
 dpi_scale = user32.GetDpiForWindow(hwnd) / 96
+if not restored:
+    x = round(START_X * dpi_scale)
+    y = round(START_Y * dpi_scale)
+user32.SetWindowPos(hwnd, None, x, y, window_width(), eye_size(),
+                    SWP_NOZORDER | SWP_NOACTIVATE)
 
 draw_eyes(hwnd, pupils_for_cursor(hwnd))
 
