@@ -4,7 +4,7 @@ Four small toys for the Windows desktop, written in Python: an
 internet-connection light, a pair of eyes that follow the mouse, the
 Swiss railway clock, and a CPU temperature gauge.
 
-![Net-Eye, Win-Eyes, SBB-Uhr and CPU-Temp](images/desk-toys.png)
+![Net-Eye, Win-Eyes, SBB-Uhr and CPU-Temp](images/all-four.png)
 
 | Toy | What it shows |
 |---|---|
@@ -125,7 +125,7 @@ the second hand goes round in 58.5 seconds and waits at 12 until the
 full minute, when the minute hand jumps forward with a small elastic
 swing.
 
-![SBB-Uhr in normal and inverted colours](images/sbb-uhr.png)
+![SBB-Uhr in normal and inverted colours](images/sbb-uhr-colours.png)
 
 Menu: **Zoom** (0.5x to 4x), **Invert Colors**, **Exit**. Inverting
 gives a black face with white ticks and hands; the second hand stays
@@ -155,7 +155,7 @@ temperature gauge: 30 to 100 °C over three quarters of the circle, red
 from 90. The needle starts at the bottom and swings up, then glides to
 each new reading, once a second.
 
-![CPU-Temp in normal and inverted colours](images/cpu-temp.png)
+![CPU-Temp in normal and inverted colours](images/cpu-temp-colours.png)
 
 Menu: **Zoom** (0.5x to 4x), **Invert Colors**, **Exit**. Its colours
 are SBB-Uhr's inverted, so the two match side by side: the black
