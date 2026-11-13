@@ -1,0 +1,11 @@
+Desk-Toys
+Copyright 2026 Niceno
+
+This product includes software developed by SBB AG, Switzerland:
+SBB-Uhr.py is a Python translation of sbbUhr-1.3.js ("Digital SBB Uhr
+V 1.3", marke@sbb.ch), from the digital-clock folder of
+https://github.com/sbb-design-systems/brand-elements, licensed under
+the Apache License 2.0.
+
+The SBB name and the design of the SBB clock are trademarks of SBB AG
+and are not covered by the license of this repository.
