@@ -2,9 +2,10 @@
 a classic car's temperature gauge, as a desktop window.
 
 The temperature comes from Windows' performance counter "Thermal Zone
-Information", the zone the firmware calls CPUZ.  It needs no driver
-and no administrator rights, but not every computer has that zone;
-without it the needle stays at the bottom of the scale.
+Information": the zone the firmware calls CPUZ, as HP's do, or else
+the warmest zone there is.  It needs no driver and no administrator
+rights.  If the computer has no zones, the needle turns grey and rests
+at the bottom of the scale.
 
 The window (borderless, on top, alpha-blended, remembering where it
 was) comes from SBB-Uhr and Win-Eyes.
@@ -36,7 +37,8 @@ FRAME_MS  =   20  # How often the needle moves, while it moves
 GLIDE_MS  =  400  # How quickly the needle follows: the time it takes to
                   # cover about two thirds of the way to a new reading
 
-ZONE      = "cpuz"   # Thermal zone to show (its name ends with this)
+ZONE      = "cpuz"   # Thermal zone to show (its name ends with this);
+                     # if there is none, the warmest zone is shown
 
 T_MIN     =  30   # Scale of the gauge, in degrees Celsius
 T_MAX     = 100
@@ -53,6 +55,7 @@ TICK_COLOR   = (225, 225, 225)   # Ticks, numbers and labels; SBB-Uhr: 30
 HUB_COLOR    = (137, 137, 137)   # As the bezel
 RED_COLOR    = (235,   0,  30)   # Red ticks
 NEEDLE_COLOR = (235,   0,   0)   # Stays as it is when inverted
+NO_READING   = (137, 137, 137)   # Needle with no reading (as the bezel)
 
 FONT      = "bahnschrift.ttf"    # Comes with Windows 10 and 11
 
@@ -347,8 +350,10 @@ gdi32.DeleteDC.restype  = wintypes.BOOL
 # ----------------------------------------------------------------------
 # Reading the temperature: Windows' performance counter "Thermal Zone
 # Information" gives every thermal zone's temperature in kelvin; the
-# zone whose name ends with ZONE is shown.  Zones the firmware leaves
-# empty read 273 K (0 degrees Celsius) and are ignored.
+# zone whose name ends with ZONE is shown, or else the warmest zone
+# (computers name their zones differently: HP's CPU zone is CPUZ, a
+# Dell Wyse 5070 has only TZ01).  Zones the firmware leaves empty read
+# 273 K (0 degrees Celsius) and are ignored.
 # ----------------------------------------------------------------------
 
 pdh = ctypes.windll.pdh
@@ -416,8 +421,8 @@ def open_counter():
 
 
 def read_temperature():
-    """The temperature of the zone ZONE in degrees Celsius, or None if
-    it can't be read."""
+    """The temperature of the zone ZONE, or else of the warmest zone, in
+    degrees Celsius; None if no zone can be read."""
     if counter is None:
         return None
     query, handle = counter
@@ -441,14 +446,18 @@ def read_temperature():
 
     items = ctypes.cast(buffer,
                         ctypes.POINTER(PDH_FMT_COUNTERVALUE_ITEM_W))
+    warmest = None
     for index in range(count.value):
         item = items[index]
-        if not item.szName.lower().endswith(ZONE.lower()):
-            continue
         kelvin = item.FmtValue.value.doubleValue
-        if item.FmtValue.CStatus == 0 and kelvin > 273.5:
-            return kelvin - 273.15
-    return None
+        if item.FmtValue.CStatus != 0 or kelvin <= 273.5:
+            continue   # Empty zone
+        celsius = kelvin - 273.15
+        if item.szName.lower().endswith(ZONE.lower()):
+            return celsius
+        if warmest is None or celsius > warmest:
+            warmest = celsius
+    return warmest
 
 
 # ----------------------------------------------------------------------
@@ -631,7 +640,10 @@ def draw_hand(frame, polygons, discs, angle, colour):
 
 def make_frame(angle):
     frame = make_face(scale(), inverted).copy()
-    draw_hand(frame, [NEEDLE], [], angle, NEEDLE_COLOR)
+    colour = NEEDLE_COLOR
+    if temperature is None:
+        colour = NO_READING
+    draw_hand(frame, [NEEDLE], [], angle, colour)
     draw_hand(frame, [], [HUB], 0, shade(HUB_COLOR))
     return frame.tobytes()
 
@@ -719,7 +731,13 @@ def new_reading(hwnd):
     """Read the temperature; if the needle has to move, start the frame
     timer (it stops itself once the needle has arrived)."""
     global temperature, last_frame
+    had_reading = temperature is not None
     temperature = read_temperature()
+
+    # The needle's colour tells whether there is a reading
+    if had_reading != (temperature is not None):
+        draw_gauge(hwnd, needle_angle())
+
     if needle_angle() != round(angle_of(target()) / 0.05) * 0.05:
         last_frame = time.monotonic()
         user32.SetTimer(hwnd, FRAME_TIMER_ID, FRAME_MS, None)

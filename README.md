@@ -162,12 +162,13 @@ are SBB-Uhr's inverted, so the two match side by side: the black
 gauge with SBB-Uhr inverted, the white one with SBB-Uhr as it is.
 
 The temperature comes from Windows' performance counter *Thermal Zone
-Information*, the zone the firmware calls `CPUZ`. It needs no driver
-and no administrator rights, but it is in whole degrees, and a little
-calmer than the per-core temperatures that tools like HWiNFO show. Not
-every computer has this zone; without it the needle stays at the
-bottom of the scale. To see which zones a computer has, run in
-PowerShell:
+Information*: the zone the firmware calls `CPUZ`, as HP's do, or else
+the warmest zone there is (a Dell Wyse 5070, for instance, has only
+`TZ01`). It needs no driver and no administrator rights, but it is in
+whole degrees, and a little calmer than the per-core temperatures that
+tools like HWiNFO show. A computer without any zones gets a grey
+needle, resting at the bottom of the scale. To see which zones a
+computer has, run in PowerShell (no administrator needed):
 
 ```
 Get-Counter '\Thermal Zone Information(*)\Temperature'
@@ -186,11 +187,12 @@ the zone is empty.
 | `READ_MS` | How often the temperature is read (ms) |
 | `FRAME_MS` | How often the needle moves while it moves (ms) |
 | `GLIDE_MS` | How quickly the needle follows a new reading (ms) |
-| `ZONE` | The thermal zone shown |
+| `ZONE` | The thermal zone shown; if there is none, the warmest |
 | `T_MIN`, `T_MAX` | The scale, in degrees Celsius |
 | `T_RED` | Ticks from here up are red |
 | `ANGLE` | The scale runs from -`ANGLE` to +`ANGLE` degrees |
 | `*_COLOR` | Colours of the face, bezel, ticks, hub and needle |
+| `NO_READING` | Colour of the needle when no zone can be read |
 | `*_RADIUS`, `*_TICK`, `*_SIZE` | The gauge's proportions, in units of 120 |
 | `FONT` | Font of the numbers and labels |
 
