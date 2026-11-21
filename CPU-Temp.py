@@ -12,6 +12,7 @@ was) comes from SBB-Uhr and Win-Eyes.
 """
 
 import os
+import socket
 import json
 import math
 import time
@@ -129,6 +130,7 @@ BI_RGB         = 0
 DIB_RGB_COLORS = 0
 
 ID_EXIT         = 1
+ID_HOST         = 3   # Only shows the host
 ID_INVERT       = 2
 ID_ZOOM_FIRST   = 100   # Zoom choice i gets command ID_ZOOM_FIRST + i
 FRAME_TIMER_ID  = 1
@@ -249,6 +251,10 @@ user32.AppendMenuW.argtypes = [
     wintypes.HMENU, wintypes.UINT, UINT_PTR, wintypes.LPCWSTR
 ]
 user32.AppendMenuW.restype = wintypes.BOOL
+user32.SetMenuDefaultItem.argtypes = [
+    wintypes.HMENU, wintypes.UINT, wintypes.UINT
+]
+user32.SetMenuDefaultItem.restype = wintypes.BOOL
 user32.TrackPopupMenu.argtypes = [
     wintypes.HMENU,
     wintypes.UINT,
@@ -848,6 +854,13 @@ def show_menu(hwnd):
     global inverted
 
     menu = user32.CreatePopupMenu()
+
+    # The host, to tell the toys of remote desktops apart (no command;
+    # the default item, so Windows shows it in bold).
+    user32.AppendMenuW(menu, MF_STRING, ID_HOST,
+                       f"Host: {socket.gethostname()}")
+    user32.SetMenuDefaultItem(menu, ID_HOST, 0)
+    user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
 
     zoom_menu = user32.CreatePopupMenu()
     for index, choice in enumerate(ZOOMS):

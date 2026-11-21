@@ -1,4 +1,5 @@
 import os
+import socket
 import json
 import urllib.request
 import threading
@@ -66,6 +67,7 @@ WM_NCLBUTTONDOWN = 0x00A1
 HTCAPTION        = 2
 
 MF_STRING       = 0x0000
+MF_SEPARATOR    = 0x0800
 TPM_RIGHTBUTTON = 0x0002
 TPM_RETURNCMD   = 0x0100
 
@@ -77,6 +79,7 @@ DIB_RGB_COLORS = 0
 
 ID_CHECK_NOW = 1
 ID_EXIT      = 2
+ID_HOST      = 3   # Only shows the host
 TIMER_ID     = 1
 ANIM_TIMER_ID = 2
 
@@ -200,6 +203,10 @@ user32.AppendMenuW.argtypes = [
     wintypes.HMENU, wintypes.UINT, UINT_PTR, wintypes.LPCWSTR
 ]
 user32.AppendMenuW.restype = wintypes.BOOL
+user32.SetMenuDefaultItem.argtypes = [
+    wintypes.HMENU, wintypes.UINT, wintypes.UINT
+]
+user32.SetMenuDefaultItem.restype = wintypes.BOOL
 user32.TrackPopupMenu.argtypes = [
     wintypes.HMENU,
     wintypes.UINT,
@@ -598,7 +605,15 @@ def show_result(online):
 def show_menu(hwnd):
     menu = user32.CreatePopupMenu()
 
+    # The host, to tell the toys of remote desktops apart (no command;
+    # the default item, so Windows shows it in bold).
+    user32.AppendMenuW(menu, MF_STRING, ID_HOST,
+                       f"Host: {socket.gethostname()}")
+    user32.SetMenuDefaultItem(menu, ID_HOST, 0)
+    user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
+
     user32.AppendMenuW(menu, MF_STRING, ID_CHECK_NOW, "Check now")
+    user32.AppendMenuW(menu, MF_SEPARATOR, 0, None)
     user32.AppendMenuW(menu, MF_STRING, ID_EXIT, "Exit")
 
     point = wintypes.POINT()

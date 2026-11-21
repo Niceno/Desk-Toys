@@ -44,7 +44,10 @@ To start them without a console window, use `pythonw` instead of
 ## Using
 
 - **Left-drag** a toy to move it anywhere on the screen.
-- **Right-click** it for its menu, which always has **Exit**.
+- **Right-click** it for its menu, which always has **Host** at the
+  top (the computer's name, not a command: on a remote desktop the
+  toys of both computers stay on top, and this tells them apart)
+  and **Exit** at the bottom, after a separator.
 
 Each toy remembers where it is (and its zoom and colours, where it has
 them) in `%APPDATA%\<Toy>\settings.json`, so it comes back as it was
